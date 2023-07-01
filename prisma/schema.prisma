@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model interview {
+  id                                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date                                DateTime @db.Date
+  candidate_id                        String?  @db.Uuid
+  interviewer_id                      String?  @db.Uuid
+  created_at                          DateTime @default(now()) @db.Timestamp(6)
+  updated_at                          DateTime @default(now()) @db.Timestamp(6)
+  user_interview_candidate_idTouser   user?    @relation("interview_candidate_idTouser", fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_interview_interviewer_idTouser user?    @relation("interview_interviewer_idTouser", fields: [interviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model job_posting {
+  id                           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                        String   @db.VarChar(255)
+  description                  String   @db.VarChar(255)
+  hr_company_representative_id String?  @db.Uuid
+  created_at                   DateTime @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime @default(now()) @db.Timestamp(6)
+  user                         user?    @relation(fields: [hr_company_representative_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organization {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model resume {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  content      String
+  candidate_id String?  @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  user         user?    @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                                       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                    String         @unique @db.VarChar(255)
+  firstName                                String?        @db.VarChar(255)
+  lastName                                 String?        @db.VarChar(255)
+  roq_user_id                              String         @db.VarChar(255)
+  tenant_id                                String         @db.VarChar(255)
+  created_at                               DateTime       @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime       @default(now()) @db.Timestamp(6)
+  interview_interview_candidate_idTouser   interview[]    @relation("interview_candidate_idTouser")
+  interview_interview_interviewer_idTouser interview[]    @relation("interview_interviewer_idTouser")
+  job_posting                              job_posting[]
+  organization                             organization[]
+  resume                                   resume[]
+}
